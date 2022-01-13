@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { requestToken } from '../Redux/Actions';
 
-export default class Login extends Component {
+class Login extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -9,10 +12,17 @@ export default class Login extends Component {
     };
 
     this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   handleChange({ target: { name, value } }) {
     this.setState({ [name]: value });
+  }
+
+  async handleSubmit() {
+    const { history, dispatch } = this.props;
+    dispatch(requestToken());
+    history.push('/Trivia');
   }
 
   render() {
@@ -47,6 +57,7 @@ export default class Login extends Component {
             data-testid="btn-play"
             type="button"
             disabled={ email.length < 1 || name.length < 1 }
+            onClick={ this.handleSubmit }
           >
             Play
           </button>
@@ -57,3 +68,10 @@ export default class Login extends Component {
     );
   }
 }
+
+Login.propTypes = {
+  history: PropTypes.shape({ push: PropTypes.func }).isRequired,
+  dispatch: PropTypes.func.isRequired,
+};
+
+export default connect()(Login);
