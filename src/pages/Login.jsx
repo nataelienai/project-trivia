@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { requestToken } from '../Redux/Actions';
+import { requestToken, setPlayer } from '../Redux/Actions';
 
 class Login extends Component {
   constructor(props) {
@@ -21,7 +21,9 @@ class Login extends Component {
 
   async handleSubmit() {
     const { history, dispatch } = this.props;
+    const { name, email } = this.state;
     dispatch(requestToken());
+    dispatch(setPlayer(email, name));
     history.push('/Trivia');
   }
 
