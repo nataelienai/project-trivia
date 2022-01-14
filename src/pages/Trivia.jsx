@@ -6,6 +6,8 @@ import { fetchQuestions, fetchToken } from '../Helpers/API';
 
 const FAILED_RESPONSE_CODE = 3;
 const RANDOM_LIMIT = 0.5;
+const TIMER_SECONDS = 30;
+const MILLISECONDS = 1000;
 
 class Trivia extends Component {
   constructor(props) {
@@ -17,6 +19,8 @@ class Trivia extends Component {
       wrongButtonColor: 'black',
       correctButtonColor: 'black',
       answers: [],
+      seconds: TIMER_SECONDS,
+      disableButtons: false,
     };
     this.getQuestions = this.getQuestions.bind(this);
     this.shuffleAnswers = this.shuffleAnswers.bind(this);
@@ -25,6 +29,11 @@ class Trivia extends Component {
 
   componentDidMount() {
     this.getQuestions();
+    this.createTimer();
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.timerId);
   }
 
   async getQuestions() {
@@ -40,10 +49,20 @@ class Trivia extends Component {
     );
   }
 
+  createTimer() {
+    this.timerId = setInterval(() => (
+      this.setState((state) => ({ seconds: state.seconds - 1 }))
+    ), MILLISECONDS);
+
+    setTimeout(this.handleClick, TIMER_SECONDS * MILLISECONDS);
+  }
+
   handleClick() {
+    clearInterval(this.timerId);
     this.setState({
       wrongButtonColor: 'rgb(255, 0, 0)',
       correctButtonColor: 'rgb(6, 240, 15)',
+      disableButtons: true,
     });
   }
 
@@ -73,6 +92,8 @@ class Trivia extends Component {
       answers,
       wrongButtonColor,
       correctButtonColor,
+      seconds,
+      disableButtons,
     } = this.state;
     console.log(questions);
 
@@ -87,6 +108,7 @@ class Trivia extends Component {
             <h3 data-testid="question-category">
               {questions[questionIndex].category}
             </h3>
+            <h4>{`Tempo: ${seconds}`}</h4>
             {answers.map((answer, index) => (
               <button
                 style={ {
@@ -100,6 +122,7 @@ class Trivia extends Component {
                   ? `wrong-answer-${index}`
                   : 'correct-answer' }
                 onClick={ this.handleClick }
+                disabled={ disableButtons }
               >
                 {answer}
               </button>
