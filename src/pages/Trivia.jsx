@@ -14,9 +14,13 @@ class Trivia extends Component {
       questions: [],
       questionIndex: 0,
       isLoading: true,
+      wrongButtonColor: 'black',
+      correctButtonColor: 'black',
+      answers: [],
     };
     this.getQuestions = this.getQuestions.bind(this);
-    this.renderAnswers = this.renderAnswers.bind(this);
+    this.shuffleAnswers = this.shuffleAnswers.bind(this);
+    this.handleClick = this.handleClick.bind(this);
   }
 
   componentDidMount() {
@@ -30,47 +34,76 @@ class Trivia extends Component {
       const newToken = await fetchToken();
       data = await fetchQuestions(newToken);
     }
-    this.setState({ questions: data.results, isLoading: false });
+    this.setState(
+      { questions: data.results, isLoading: false },
+      this.shuffleAnswers,
+    );
   }
 
-  renderAnswers() {
+  handleClick() {
+    this.setState({
+      wrongButtonColor: 'rgb(255, 0, 0)',
+      correctButtonColor: 'rgb(6, 240, 15)',
+    });
+  }
+
+  checkCorrectAnswer(answer) {
     const { questions, questionIndex } = this.state;
-    const incorrectAnswers = questions[questionIndex].incorrect_answers
-      .map((answer, index) => (
-        <button
-          key={ answer }
-          type="button"
-          data-testid={ `wrong-answer-${index}` }
-        >
-          {answer}
-        </button>
-      ));
+    return answer !== questions[questionIndex].correct_answer;
+  }
+
+  shuffleAnswers() {
+    const { questions, questionIndex } = this.state;
 
     const answers = [
-      ...incorrectAnswers,
-      <button
-        key={ questions[questionIndex].correct_answer }
-        type="button"
-        data-testid="correct-answer"
-      >
-        {questions[questionIndex].correct_answer}
-      </button>,
+      questions[questionIndex].correct_answer,
+      ...questions[questionIndex].incorrect_answers,
     ];
+
     answers.sort(() => Math.random() - RANDOM_LIMIT);
-    return answers;
+
+    this.setState({ answers });
   }
 
   render() {
-    const { questions, questionIndex, isLoading } = this.state;
-    console.log(questions, questionIndex);
+    const {
+      questions,
+      questionIndex,
+      isLoading,
+      answers,
+      wrongButtonColor,
+      correctButtonColor,
+    } = this.state;
+    console.log(questions);
+
     return (
       <div>
         <Header />
         {isLoading ? null : (
           <div data-testid="answer-options">
-            <h2 data-testid="question-text">{ questions[questionIndex].question }</h2>
-            <h3 data-testid="question-category">{ questions[questionIndex].category }</h3>
-            { this.renderAnswers() }
+            <h2 data-testid="question-text">
+              {questions[questionIndex].question}
+            </h2>
+            <h3 data-testid="question-category">
+              {questions[questionIndex].category}
+            </h3>
+            {answers.map((answer, index) => (
+              <button
+                style={ {
+                  border: this.checkCorrectAnswer(answer)
+                    ? `3px solid ${wrongButtonColor}`
+                    : `3px solid ${correctButtonColor}`,
+                } }
+                key={ answer }
+                type="button"
+                data-testid={ this.checkCorrectAnswer(answer)
+                  ? `wrong-answer-${index}`
+                  : 'correct-answer' }
+                onClick={ this.handleClick }
+              >
+                {answer}
+              </button>
+            ))}
           </div>
         )}
       </div>
