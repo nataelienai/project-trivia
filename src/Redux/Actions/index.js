@@ -15,6 +15,6 @@ export const setPlayer = (email, name) => ({
 
 export const requestToken = () => async (dispatch) => {
   const token = await fetchToken();
-  saveToken(token);
   dispatch(getToken(token));
+  saveToken(token);
 };
