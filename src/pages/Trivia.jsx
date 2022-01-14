@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import Header from '../components/Header';
 import { fetchQuestions, fetchToken } from '../Helpers/API';
+import calculateAndSaveScore from '../Helpers/score';
 
 const FAILED_RESPONSE_CODE = 3;
 const RANDOM_LIMIT = 0.5;
@@ -22,6 +23,7 @@ class Trivia extends Component {
       seconds: TIMER_SECONDS,
       disableButtons: false,
     };
+
     this.getQuestions = this.getQuestions.bind(this);
     this.shuffleAnswers = this.shuffleAnswers.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -54,11 +56,18 @@ class Trivia extends Component {
       this.setState((state) => ({ seconds: state.seconds - 1 }))
     ), MILLISECONDS);
 
-    setTimeout(this.handleClick, TIMER_SECONDS * MILLISECONDS);
+    setTimeout(() => this.handleClick(''), TIMER_SECONDS * MILLISECONDS);
   }
 
-  handleClick() {
+  handleClick(answer) {
+    const { questions, questionIndex, seconds } = this.state;
+    const { dispatch } = this.props;
+
     clearInterval(this.timerId);
+
+    if (this.checkCorrectAnswer(answer)) {
+      calculateAndSaveScore(seconds, questions[questionIndex].difficulty, dispatch);
+    }
     this.setState({
       wrongButtonColor: 'rgb(255, 0, 0)',
       correctButtonColor: 'rgb(6, 240, 15)',
@@ -68,7 +77,7 @@ class Trivia extends Component {
 
   checkCorrectAnswer(answer) {
     const { questions, questionIndex } = this.state;
-    return answer !== questions[questionIndex].correct_answer;
+    return answer === questions[questionIndex].correct_answer;
   }
 
   shuffleAnswers() {
@@ -95,7 +104,6 @@ class Trivia extends Component {
       seconds,
       disableButtons,
     } = this.state;
-    console.log(questions);
 
     return (
       <div>
@@ -113,15 +121,15 @@ class Trivia extends Component {
               <button
                 style={ {
                   border: this.checkCorrectAnswer(answer)
-                    ? `3px solid ${wrongButtonColor}`
-                    : `3px solid ${correctButtonColor}`,
+                    ? `3px solid ${correctButtonColor}`
+                    : `3px solid ${wrongButtonColor}`,
                 } }
                 key={ answer }
                 type="button"
                 data-testid={ this.checkCorrectAnswer(answer)
-                  ? `wrong-answer-${index}`
-                  : 'correct-answer' }
-                onClick={ this.handleClick }
+                  ? 'correct-answer'
+                  : `wrong-answer-${index}` }
+                onClick={ () => this.handleClick(answer) }
                 disabled={ disableButtons }
               >
                 {answer}
@@ -136,6 +144,7 @@ class Trivia extends Component {
 
 Trivia.propTypes = {
   token: PropTypes.string.isRequired,
+  dispatch: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
