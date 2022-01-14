@@ -22,7 +22,7 @@ class Login extends Component {
   async handleSubmit() {
     const { history, dispatch } = this.props;
     const { name, email } = this.state;
-    dispatch(requestToken());
+    await dispatch(requestToken());
     dispatch(setPlayer(email, name));
     history.push('/Trivia');
   }
