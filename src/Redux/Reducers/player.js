@@ -1,4 +1,4 @@
-import { SET_PLAYER, SET_SCORE } from '../Actions';
+import { SET_PLAYER, SET_SCORE, RESET_USER } from '../Actions';
 
 const INITIAL_STATE = {
   name: '',
@@ -22,6 +22,9 @@ const player = (state = INITIAL_STATE, action) => {
       score: state.score + action.payload,
       assertions: state.assertions + 1,
     };
+
+  case RESET_USER:
+    return INITIAL_STATE;
 
   default:
     return state;
