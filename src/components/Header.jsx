@@ -1,11 +1,9 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import md5 from 'crypto-js/md5';
 import { connect } from 'react-redux';
+import { getImage } from '../Helpers/API';
 
 class Header extends Component {
-  getImage = (email) => md5(email).toString();
-
   render() {
     const { name, email, score } = this.props;
 
@@ -13,7 +11,7 @@ class Header extends Component {
       <header>
         <img
           data-testid="header-profile-picture"
-          src={ `https://www.gravatar.com/avatar/${this.getImage(email)}` }
+          src={ `https://www.gravatar.com/avatar/${getImage(email)}` }
           alt="avatar"
         />
         <p data-testid="header-player-name">

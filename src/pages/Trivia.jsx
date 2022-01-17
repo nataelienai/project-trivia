@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import Header from '../components/Header';
-import { fetchQuestions, fetchToken } from '../Helpers/API';
+import { fetchQuestions, fetchToken, saveRanking } from '../Helpers/API';
 import calculateAndSaveScore from '../Helpers/score';
 
 const FAILED_RESPONSE_CODE = 3;
@@ -103,10 +103,11 @@ class Trivia extends Component {
 
   changeQuestion() {
     const { questionIndex } = this.state;
-    const { history } = this.props;
+    const { history, name, email, score } = this.props;
 
     if (questionIndex === INDEX_LIMIT) {
       history.push('/feedback');
+      saveRanking({ name, email, score });
     } else {
       this.setState((state) => ({
         questionIndex: state.questionIndex + 1,
@@ -185,10 +186,16 @@ Trivia.propTypes = {
     push: PropTypes.func.isRequired,
   }).isRequired,
   token: PropTypes.string.isRequired,
+  email: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  score: PropTypes.number.isRequired,
 };
 
 const mapStateToProps = (state) => ({
   token: state.token,
+  email: state.player.gravatarEmail,
+  name: state.player.name,
+  score: state.player.score,
 });
 
 export default connect(mapStateToProps)(Trivia);
