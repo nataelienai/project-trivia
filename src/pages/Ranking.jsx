@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import RankingList from '../components/RankingList';
 import { resetUser } from '../Redux/Actions';
 
 class Ranking extends Component {
@@ -20,7 +21,7 @@ class Ranking extends Component {
     return (
       <div>
         <h1 data-testid="ranking-title">Ranking</h1>
-
+        <RankingList />
         <button
           data-testid="btn-go-home"
           type="button"
