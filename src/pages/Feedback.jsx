@@ -2,10 +2,23 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Header from '../components/Header';
+import { resetUser } from '../Redux/Actions';
 
 const MIN_ASSERTIONS = 3;
 
 class Feedback extends Component {
+  constructor(props) {
+    super(props);
+
+    this.playAgain = this.playAgain.bind(this);
+  }
+
+  playAgain() {
+    const { resetPlayerData, history } = this.props;
+    resetPlayerData();
+    history.push('/');
+  }
+
   render() {
     const { assertions, score } = this.props;
 
@@ -32,6 +45,14 @@ class Feedback extends Component {
             { assertions }
           </span>
         </p>
+
+        <button
+          data-testid="btn-play-again"
+          type="button"
+          onClick={ this.playAgain }
+        >
+          Play Again
+        </button>
       </div>
     );
   }
@@ -39,6 +60,10 @@ class Feedback extends Component {
 
 Feedback.propTypes = {
   assertions: PropTypes.number.isRequired,
+  history: PropTypes.shape({
+    push: PropTypes.func.isRequired,
+  }).isRequired,
+  resetPlayerData: PropTypes.func.isRequired,
   score: PropTypes.number.isRequired,
 };
 
@@ -47,4 +72,8 @@ const mapStateToProps = (state) => ({
   score: state.player.score,
 });
 
-export default connect(mapStateToProps)(Feedback);
+const mapDispatchToProps = (dispatch) => ({
+  resetPlayerData: () => dispatch(resetUser()),
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Feedback);
