@@ -9,6 +9,7 @@ const FAILED_RESPONSE_CODE = 3;
 const RANDOM_LIMIT = 0.5;
 const TIMER_SECONDS = 30;
 const MILLISECONDS = 1000;
+const INDEX_LIMIT = 4;
 
 class Trivia extends Component {
   constructor(props) {
@@ -21,12 +22,13 @@ class Trivia extends Component {
       correctButtonColor: 'black',
       answers: [],
       seconds: TIMER_SECONDS,
-      disableButtons: false,
+      questionConcluded: false,
     };
 
     this.getQuestions = this.getQuestions.bind(this);
     this.shuffleAnswers = this.shuffleAnswers.bind(this);
     this.handleClick = this.handleClick.bind(this);
+    this.changeQuestion = this.changeQuestion.bind(this);
   }
 
   componentDidMount() {
@@ -56,7 +58,7 @@ class Trivia extends Component {
       this.setState((state) => ({ seconds: state.seconds - 1 }))
     ), MILLISECONDS);
 
-    setTimeout(() => this.handleClick(''), TIMER_SECONDS * MILLISECONDS);
+    this.timeoutId = setTimeout(() => this.handleClick(''), TIMER_SECONDS * MILLISECONDS);
   }
 
   handleClick(answer) {
@@ -64,6 +66,7 @@ class Trivia extends Component {
     const { dispatch } = this.props;
 
     clearInterval(this.timerId);
+    clearTimeout(this.timeoutId);
 
     if (this.checkCorrectAnswer(answer)) {
       calculateAndSaveScore(seconds, questions[questionIndex].difficulty, dispatch);
@@ -71,13 +74,19 @@ class Trivia extends Component {
     this.setState({
       wrongButtonColor: 'rgb(255, 0, 0)',
       correctButtonColor: 'rgb(6, 240, 15)',
-      disableButtons: true,
+      questionConcluded: true,
     });
   }
 
   checkCorrectAnswer(answer) {
     const { questions, questionIndex } = this.state;
     return answer === questions[questionIndex].correct_answer;
+  }
+
+  sortAnswers(answers) {
+    const newAnswers = [...answers];
+    newAnswers.sort(() => Math.random() - RANDOM_LIMIT);
+    return newAnswers;
   }
 
   shuffleAnswers() {
@@ -87,10 +96,29 @@ class Trivia extends Component {
       questions[questionIndex].correct_answer,
       ...questions[questionIndex].incorrect_answers,
     ];
+    const newAnswers = this.sortAnswers(answers);
 
-    answers.sort(() => Math.random() - RANDOM_LIMIT);
+    this.setState({ answers: newAnswers });
+  }
 
-    this.setState({ answers });
+  changeQuestion() {
+    const { questionIndex } = this.state;
+    const { history } = this.props;
+
+    if (questionIndex === INDEX_LIMIT) {
+      history.push('/feedback');
+    } else {
+      this.setState((state) => ({
+        questionIndex: state.questionIndex + 1,
+        seconds: TIMER_SECONDS,
+        wrongButtonColor: 'black',
+        correctButtonColor: 'black',
+        questionConcluded: false,
+      }), () => {
+        this.createTimer();
+        this.shuffleAnswers();
+      });
+    }
   }
 
   render() {
@@ -102,7 +130,7 @@ class Trivia extends Component {
       wrongButtonColor,
       correctButtonColor,
       seconds,
-      disableButtons,
+      questionConcluded,
     } = this.state;
 
     return (
@@ -130,11 +158,20 @@ class Trivia extends Component {
                   ? 'correct-answer'
                   : `wrong-answer-${index}` }
                 onClick={ () => this.handleClick(answer) }
-                disabled={ disableButtons }
+                disabled={ questionConcluded }
               >
                 {answer}
               </button>
             ))}
+            {questionConcluded && (
+              <button
+                onClick={ this.changeQuestion }
+                data-testid="btn-next"
+                type="button"
+              >
+                Next
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -143,8 +180,11 @@ class Trivia extends Component {
 }
 
 Trivia.propTypes = {
-  token: PropTypes.string.isRequired,
   dispatch: PropTypes.func.isRequired,
+  history: PropTypes.shape({
+    push: PropTypes.func.isRequired,
+  }).isRequired,
+  token: PropTypes.string.isRequired,
 };
 
 const mapStateToProps = (state) => ({
